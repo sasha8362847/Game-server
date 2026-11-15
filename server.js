@@ -19,6 +19,17 @@ io.on('connection', (socket) => {
         if (io.sockets.adapter.rooms.get(roomCode)) {
             socket.join(roomCode);
             players[socket.id] = { room: roomCode, x: 0, y: 0, z: 0, rotY: 0 };
+            
+            // Отправляем новому игроку список всех, кто уже в комнате
+            const roomPlayers = [];
+            for (const [id, p] of Object.entries(players)) {
+                if (p.room === roomCode && id !== socket.id) {
+                    roomPlayers.push({ id: id, x: p.x, y: p.y, z: p.z, rotY: p.rotY });
+                }
+            }
+            socket.emit('existingPlayers', roomPlayers);
+
+            // Сообщаем остальным, что зашел новый игрок
             socket.to(roomCode).emit('playerJoined', socket.id);
             socket.emit('roomJoined', roomCode);
         } else {
