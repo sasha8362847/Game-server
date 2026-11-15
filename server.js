@@ -12,6 +12,15 @@ io.on('connection', (socket) => {
     socket.on('createRoom', (roomCode) => {
         socket.join(roomCode);
         players[socket.id] = { room: roomCode, x: 0, y: 0, z: 0, rotY: 0 };
+        
+        // Отправляем хосту список игроков (на случай, если кто-то уже есть, хотя он первый)
+        const roomPlayers = [];
+        for (const [id, p] of Object.entries(players)) {
+            if (p.room === roomCode && id !== socket.id) {
+                roomPlayers.push({ id: id, x: p.x, y: p.y, z: p.z, rotY: p.rotY });
+            }
+        }
+        socket.emit('existingPlayers', roomPlayers);
         socket.emit('roomCreated', roomCode);
     });
 
